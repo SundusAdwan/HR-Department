@@ -161,8 +161,36 @@ Docker itself takes care of the port binding by use of the -p option on the comm
 
 
 **11. Logs**
+Your application ( even inside the container ) should always log to stdout. By writing to stdout of your process we can utilize the docker logging subsystem.
+Example
+This example shows running Supervisord as your primary process in the docker container and nginx writing logs to stdout which in turn are written to the containers stdout. 
+writeup on using supervisor inside docker containers can be found here:
+/nginx/conf.d:
+<`[supervisord]
+logfile=/dev/null
+pidfile=/var/run/supervisord.pid
+nodaemon=true
 
-
+[program:nginx]
+command=/usr/sbin/nginx
+redirect_stderr=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+auto_start=true
+autorestart=true
+user=root `>
+/nginx/sites-enabled/app:
+<`worker_processes 1;
+daemon off;
+error_log /dev/stdout;
+http {
+  access_log /dev/stdout;
+  server {
+    listen            *:8181;
+    root              /app/bacon-blog;
+    index             index.php;
+  }
+}`>
 
 **12. Admin processes**
 
